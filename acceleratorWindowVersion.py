@@ -5,7 +5,7 @@
 #  Created by Jaccoud Damien on 18.12.21, I was drunk when I coded this
 #  Window version
 #
-#  Modified by : 
+#  Modified by : Thomas DuBois on 18.12.21
 #
 #  This program is due to run multiple simulation simultaniously, by using all CPU. 
 #
@@ -33,8 +33,8 @@ def launchNextProgram(index, array, acc, i):
         index.value += 1
         current = array[j]
         x = "test"
-        os.system(current) #subprocess don't work on window need to check
-        #x = subprocess.run([current], shell=True, capture_output=True)# Run simulation
+        #os.system(current) #subprocess don't work on window need to check
+        x = subprocess.run(current, shell=True, capture_output=True)# Run simulation
         print("Done " + str(j + 1) + "/" + str(len(array)))
         if index.value == len(array):# if simulations has not been runed, create a new process to run it
             pass
