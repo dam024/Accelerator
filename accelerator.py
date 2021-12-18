@@ -5,9 +5,9 @@
 #  Created by Jaccoud Damien on 18.12.21, I was drunk when I coded this
 #  Window version
 #
-#  Modified by : Thomas DuBois on 18.12.21
+#  Modified by : Thomas DuBois
 #
-#  This program is due to run multiple simulation simultaniously, by using all CPU. 
+#  This program is due to run multiple simulation simultaniously, by using all CPU.
 #
 #
 #
@@ -26,29 +26,29 @@ import subprocess
 import time
 
 
-#Function used by process to run a new simulation. When finished, send a new simulation if one is available
-def launchNextProgram(index, array, acc, i):
-    if index.value < len(array):
-        j = index.value
-        index.value += 1
-        current = array[j]
-        x = "test"
-        #os.system(current) #subprocess don't work on window need to check
-        x = subprocess.run(current, shell=True, capture_output=True)# Run simulation
-        print("Done " + str(j + 1) + "/" + str(len(array)))
-        if index.value == len(array):# if simulations has not been runed, create a new process to run it
+# Function used by process to run a new simulation. When finished, send a new simulation if one is available
+def launchNextProgram(index, array, i):
+    # print(index.get())
+    if not index.empty():
+        j = 0  # index.value
+        #index.value += 1
+        current = index.get()  # array[j]
+        x = subprocess.run(current, shell=True, capture_output=True)  # Run simulation
+        i.value += 1
+        print("Done " + str(i.value) + "/" + str(len(array)))
+        if index.empty():  # index.value == len(array):  # if simulations has not been runed, create a new process to run it
             pass
         else:
-            p = Process(target=launchNextProgram, args=(index, array, acc, i))
+            p = Process(target=launchNextProgram, args=(index, array, i))
             p.start()
             p.join()
             p.close()
 
 
-#Main class to handle processes
+# Main class to handle processes
 class Accelerator:
     inputFile = ''
-    cmd = Queue()
+    cmd = []
     test = 0
 
     def __init__(self, inputFile):
@@ -70,13 +70,17 @@ class Accelerator:
     def execute(self):
         nb = cpu_count()
         print(nb, len(self.cmd))
-        self.t = Value('i', 0)
+        self.t = Queue()
+
+        for i in self.cmd:
+            self.t.put(i)
         proc = []  # Les process
+        self.test = Value('i', 0)
         for i in range(nb):
-            p = Process(target=launchNextProgram, args=(self.t, self.cmd, self, i))
+            p = Process(target=launchNextProgram, args=(self.t, self.cmd, self.test))
             p.start()
             proc.append(p)
-            time.sleep(0.1)#To desincronize simulations
+            time.sleep(0.1)  # To desincronize simulations
 
         for i in range(len(proc)):
             proc[i].join()
@@ -86,13 +90,13 @@ class Accelerator:
 
     def launchNewProcess(self):
         print("Prepare to launch process")
-        p = Process(target=launchNextProgram, args=(self.t, self.cmd, self, -1))
+        p = Process(target=launchNextProgram, args=(self.t, self.cmd, -1))
         p.start()
         os.wait()
 
 
 if __name__ == "__main__":
-    inputFile = "test.txt"
+    inputFile = "cmd.txt"
     if len(sys.argv) > 1:
         inputFile = sys.argv[1]
     print("Input : ", inputFile)
