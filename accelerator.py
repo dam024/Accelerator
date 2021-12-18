@@ -3,10 +3,11 @@
 #
 #
 #  Created by Jaccoud Damien on 18.12.21, I was drunk when I coded this
+#  Window version
 #
-#  Modified by :
+#  Modified by : Thomas DuBois on 18.12.21
 #
-#  This program is due to run multiple simulation simultaniously, by using all CPU.
+#  This program is due to run multiple simulation simultaniously, by using all CPU. 
 #
 #
 #
@@ -25,16 +26,17 @@ import subprocess
 import time
 
 
-# Function used by process to run a new simulation. When finished, send a new simulation if one is available
+#Function used by process to run a new simulation. When finished, send a new simulation if one is available
 def launchNextProgram(index, array, acc, i):
     if index.value < len(array):
         j = index.value
         index.value += 1
         current = array[j]
-        x = subprocess.run([current], shell=True, capture_output=True)  # Run simulation
+        x = "test"
+        #os.system(current) #subprocess don't work on window need to check
+        x = subprocess.run(current, shell=True, capture_output=True)# Run simulation
         print("Done " + str(j + 1) + "/" + str(len(array)))
-        print("x : ", x)
-        if index.value == len(array):  # if simulations has not been runed, create a new process to run it
+        if index.value == len(array):# if simulations has not been runed, create a new process to run it
             pass
         else:
             p = Process(target=launchNextProgram, args=(index, array, acc, i))
@@ -43,7 +45,7 @@ def launchNextProgram(index, array, acc, i):
             p.close()
 
 
-# Main class to handle processes
+#Main class to handle processes
 class Accelerator:
     inputFile = ''
     cmd = Queue()
@@ -69,13 +71,12 @@ class Accelerator:
         nb = cpu_count()
         print(nb, len(self.cmd))
         self.t = Value('i', 0)
-        self.isOk = Value('i', 0)
         proc = []  # Les process
         for i in range(nb):
             p = Process(target=launchNextProgram, args=(self.t, self.cmd, self, i))
             p.start()
             proc.append(p)
-            time.sleep(0.1)  # To desincronize simulations
+            time.sleep(0.1)#To desincronize simulations
 
         for i in range(len(proc)):
             proc[i].join()
