@@ -27,29 +27,32 @@ import time
 
 
 # Function used by process to run a new simulation. When finished, send a new simulation if one is available
-def launchNextProgram(index, array, i):
+def launchNextProgram(index, array):
     # print(index.get())
-    if not index.empty():
-        j = 0  # index.value
-        #index.value += 1
-        current = index.get()  # array[j]
-        x = subprocess.run(current, shell=True, capture_output=True)  # Run simulation
-        i.value += 1
-        print("Done " + str(i.value) + "/" + str(len(array)))
+    #print("Parent :",parent)
+    if not index.empty():#Tester d'utiliser des Locks, afin de bloquer l'exécution de la récupération d'index en même temps
+        try:# It happends that two process try to get exactly at the same time the get. If it's the end of the queue, it's a problem, because one process will wait untile a new element is added on the queue (it means undefinitavely). So I put a timeout, after what the get() method threw an exception. Si with this code, it's perfectly handled.
+            current = index.get(timeout=0.1)  # set a timeout, so that if no element is found the program don't wait for an element... I had the bug that it was sometimes blocked at the end, so it was not
+        except:
+            return
+            
+        x = subprocess.run(current[0], shell=True, capture_output=True)  # Run simulation
+        print("Done " + str(current[1] + 1) + "/" + str(len(array)))
         if index.empty():  # index.value == len(array):  # if simulations has not been runed, create a new process to run it
             pass
         else:
-            p = Process(target=launchNextProgram, args=(index, array, i))
+            p = Process(target=launchNextProgram, args=(index, array))
             p.start()
             p.join()
             p.close()
+    else:
+        pass
 
 
 # Main class to handle processes
 class Accelerator:
     inputFile = ''
     cmd = []
-    test = 0
 
     def __init__(self, inputFile):
         self.inputFile = inputFile
@@ -72,27 +75,32 @@ class Accelerator:
         print(nb, len(self.cmd))
         self.t = Queue()
 
-        for i in self.cmd:
-            self.t.put(i)
+        for i in range(len(self.cmd)):
+            self.t.put([self.cmd[i], i])
         proc = []  # Les process
-        self.test = Value('i', 0)
-        for i in range(nb):
-            p = Process(target=launchNextProgram, args=(self.t, self.cmd, self.test))
+        for i in range(min(nb, len(self.cmd))):
+            p = Process(target=launchNextProgram, args=(self.t, self.cmd))
             p.start()
             proc.append(p)
-            time.sleep(0.1)  # To desincronize simulations
+            #time.sleep(0.1)  # To desincronize simulations
 
         for i in range(len(proc)):
+            #print("Join process",i,"\n",proc[i])
             proc[i].join()
+            #print("Terminate process",i)
             proc[i].close()
+            #print("Close successfull of processs",i)
 
         # os.wait()  # Attend que tous les process soient termines
 
     def launchNewProcess(self):
-        print("Prepare to launch process")
-        p = Process(target=launchNextProgram, args=(self.t, self.cmd, -1))
+        #print("Prepare to launch process")
+        p = Process(target=launchNextProgram, args=(self.t, self.cmd))
         p.start()
-        os.wait()
+        p.join()
+        #print("Terminate new Process")
+        p.close()
+        #print("Close successfull")
 
 
 if __name__ == "__main__":
