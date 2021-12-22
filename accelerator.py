@@ -30,13 +30,16 @@ import time
 def launchNextProgram(index, array):
     # print(index.get())
     #print("Parent :",parent)
-    if not index.empty():#Tester d'utiliser des Locks, afin de bloquer l'exécution de la récupération d'index en même temps
-        try:# It happends that two process try to get exactly at the same time the get. If it's the end of the queue, it's a problem, because one process will wait untile a new element is added on the queue (it means undefinitavely). So I put a timeout, after what the get() method threw an exception. Si with this code, it's perfectly handled.
+    if not index.empty():  # Tester d'utiliser des Locks, afin de bloquer l'exécution de la récupération d'index en même temps
+        try:  # It happends that two process try to get exactly at the same time the get. If it's the end of the queue, it's a problem, because one process will wait untile a new element is added on the queue (it means undefinitavely). So I put a timeout, after what the get() method threw an exception. Si with this code, it's perfectly handled.
             current = index.get(timeout=0.1)  # set a timeout, so that if no element is found the program don't wait for an element... I had the bug that it was sometimes blocked at the end, so it was not
         except:
             return
-            
+
         x = subprocess.run(current[0], shell=True, capture_output=True)  # Run simulation
+        if x.returncode != 0:
+            print("Cmd", current[0], "exit with error code :", x.returncode)
+            print(x.stderr.decode("utf-8"))
         print("Done " + str(current[1] + 1) + "/" + str(len(array)))
         if index.empty():  # index.value == len(array):  # if simulations has not been runed, create a new process to run it
             pass
@@ -82,7 +85,7 @@ class Accelerator:
             p = Process(target=launchNextProgram, args=(self.t, self.cmd))
             p.start()
             proc.append(p)
-            #time.sleep(0.1)  # To desincronize simulations
+            # time.sleep(0.1)  # To desincronize simulations
 
         for i in range(len(proc)):
             #print("Join process",i,"\n",proc[i])
