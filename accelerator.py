@@ -2,8 +2,7 @@
 #  Accelerator.py
 #
 #
-#  Created by Jaccoud Damien on 18.12.21, I was drunk when I coded this
-#  Window version
+#  Created by Jaccoud Damien on 18.12.21 © Copyright
 #
 #  Modified by : Thomas DuBois
 #
