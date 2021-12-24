@@ -10,7 +10,7 @@
 #  This program is due to run multiple simulation simultaniously, by using all CPU.
 #
 #
-#
+#  Source code : https://github.com/dam024/Accelerator
 #
 #
 #  Usage : python3 accelerator.py <cmdFile>
