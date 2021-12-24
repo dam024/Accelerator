@@ -6,7 +6,7 @@
 #
 #  Modified by : Thomas DuBois
 #
-#  This program is due to run multiple simulation simultaniously, by using all CPU.
+#  This program is due to run multiple simulation simultaniously, by using all CPU. The goal is to accelerate simulations by executing multiple of them at a time. 
 #
 #
 #  Source code : https://github.com/dam024/Accelerator
