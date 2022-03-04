@@ -26,7 +26,7 @@ import time
 
 
 # Function used by process to run a new simulation. When finished, send a new simulation if one is available
-def launchNextProgram(index, array):
+def launchNextProgram(index, array,display):
     # print(index.get())
     #print("Parent :",parent)
     if not index.empty():  # Tester d'utiliser des Locks, afin de bloquer l'exécution de la récupération d'index en même temps
@@ -40,10 +40,13 @@ def launchNextProgram(index, array):
             print("Cmd", current[0], "exit with error code :", x.returncode)
             print(x.stderr.decode("utf-8"))
         print("Done " + str(current[1] + 1) + "/" + str(len(array)))
+        if display:
+            print(x.stdout.decode("utf-8"))
+
         if index.empty():  # index.value == len(array):  # if simulations has not been runed, create a new process to run it
             pass
         else:
-            p = Process(target=launchNextProgram, args=(index, array))
+            p = Process(target=launchNextProgram, args=(index, array,display))
             p.start()
             p.join()
             p.close()
@@ -55,9 +58,11 @@ def launchNextProgram(index, array):
 class Accelerator:
     inputFile = ''
     cmd = []
+    display = False
 
-    def __init__(self, inputFile):
+    def __init__(self, inputFile,display):
         self.inputFile = inputFile
+        self.display = display
         print(self.inputFile)
         if os.path.isfile(self.inputFile):
             with open(self.inputFile) as my_file:
@@ -81,7 +86,7 @@ class Accelerator:
             self.t.put([self.cmd[i], i])
         proc = []  # Les process
         for i in range(min(nb, len(self.cmd))):
-            p = Process(target=launchNextProgram, args=(self.t, self.cmd))
+            p = Process(target=launchNextProgram, args=(self.t, self.cmd,self.display))
             p.start()
             proc.append(p)
             # time.sleep(0.1)  # To desincronize simulations
@@ -97,7 +102,7 @@ class Accelerator:
 
     def launchNewProcess(self):
         #print("Prepare to launch process")
-        p = Process(target=launchNextProgram, args=(self.t, self.cmd))
+        p = Process(target=launchNextProgram, args=(self.t, self.cmd,self.display))
         p.start()
         p.join()
         #print("Terminate new Process")
@@ -107,7 +112,10 @@ class Accelerator:
 
 if __name__ == "__main__":
     inputFile = "cmd.txt"
+    displayOut = "0"
     if len(sys.argv) > 1:
         inputFile = sys.argv[1]
+    if len(sys.argv) > 2:
+        displayOut = sys.argv[2]
     print("Input : ", inputFile)
-    acc = Accelerator(inputFile)
+    acc = Accelerator(inputFile,displayOut != "0")
