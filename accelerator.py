@@ -39,6 +39,8 @@ def launchNextProgram(index, array,display):
         if x.returncode != 0:
             print("Cmd", current[0], "exit with error code :", x.returncode)
             print(x.stderr.decode("utf-8"))
+        elif len(x.stderr) != 0:
+            print(x.stderr.decode("utf-8"))
         print("Done " + str(current[1] + 1) + "/" + str(len(array)))
         if display:
             print(x.stdout.decode("utf-8"))
